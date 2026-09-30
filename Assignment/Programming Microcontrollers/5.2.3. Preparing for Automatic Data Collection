@@ -1,0 +1,129 @@
+/*
+ * ============================================================
+ * Project:     ESP8266 Automatic Battery Data Logger
+ * Course:      EE 470 - Internet of Things
+ * Professor:   Dr. Farid
+ * Author:      Geovani Palomec
+ * Date:        10/6/26
+ * Version:     1.0
+ *
+ * Board:       NodeMCU 1.0 (ESP-12E Module)
+ * IDE:         VS Code + PlatformIO
+ *
+ * Description:
+ * Measures A0 and battery voltage once every 60 seconds.
+ * Uses the voltage-divider relationship to calculate
+ * the actual battery voltage.
+ *
+ * Output is formatted as CSV for later analysis.
+ * ============================================================
+ */
+
+#include <Arduino.h>
+
+#define ADC_PIN A0
+
+// Actual measured resistor values
+const float R1 = 32970.0;   // 32.97 kOhm
+const float R2 = 9980.0;    // 9.98 kOhm
+
+// Calibrated NodeMCU external A0 range
+const float A0_MAX_VOLTAGE = 3.01;
+
+// 10-bit ADC
+const float ADC_MAX_COUNT = 1023.0;
+
+// Sampling interval = 60 seconds
+const unsigned long SAMPLE_INTERVAL = 60000;
+
+// Timing
+unsigned long previousTime = 0;
+
+// Measurement number
+unsigned long sampleNumber = 0;
+
+
+// ------------------------------------------------------------
+// Read voltage at A0
+// ------------------------------------------------------------
+float readA0Voltage() {
+
+  int rawADC = analogRead(ADC_PIN);
+
+  float a0Voltage =
+      (rawADC / ADC_MAX_COUNT) * A0_MAX_VOLTAGE;
+
+  return a0Voltage;
+}
+
+
+// ------------------------------------------------------------
+// Calculate battery voltage from A0 voltage
+// ------------------------------------------------------------
+float calculateBatteryVoltage(float a0Voltage) {
+
+  float batteryVoltage =
+      a0Voltage * ((R1 + R2) / R2);
+
+  return batteryVoltage;
+}
+
+
+// ------------------------------------------------------------
+// Setup
+// ------------------------------------------------------------
+void setup() {
+
+  Serial.begin(9600);
+
+  // Allow startup messages to finish
+  delay(3000);
+
+  // CSV header
+  Serial.println(
+    "Sample,Elapsed Time (min),A0 Voltage (V),Battery Voltage (V)"
+  );
+
+  // Take first measurement immediately
+  previousTime = millis() - SAMPLE_INTERVAL;
+}
+
+
+// ------------------------------------------------------------
+// Main loop
+// ------------------------------------------------------------
+void loop() {
+
+  unsigned long currentTime = millis();
+
+  // Take one measurement every 60 seconds
+  if (currentTime - previousTime >= SAMPLE_INTERVAL) {
+
+    previousTime = currentTime;
+
+    sampleNumber++;
+
+    // Measure voltage at A0
+    float a0Voltage = readA0Voltage();
+
+    // Calculate actual battery voltage
+    float batteryVoltage =
+        calculateBatteryVoltage(a0Voltage);
+
+    // Elapsed time in minutes
+    float elapsedMinutes =
+        currentTime / 60000.0;
+
+    // Print CSV data
+    Serial.print(sampleNumber);
+    Serial.print(",");
+
+    Serial.print(elapsedMinutes, 2);
+    Serial.print(",");
+
+    Serial.print(a0Voltage, 4);
+    Serial.print(",");
+
+    Serial.println(batteryVoltage, 4);
+  }
+}
