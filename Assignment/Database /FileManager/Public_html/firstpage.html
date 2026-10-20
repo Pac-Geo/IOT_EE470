@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>📚 EE 470 — Internet of Things</title>
+  <style>
+    /* ============================================
+       CSS VARIABLES - Customize colors here!
+       ============================================ */
+    :root {
+      --primary-color: #0f766e;      /* Main theme color */
+      --primary-light: #ecfeff;      /* Light accent color */
+      --primary-border: #a5f3fc;     /* Border for tags */
+      --primary-text: #0e7490;       /* Text for tags */
+      --background: #f7f7f8;         /* Page background */
+      --card-background: #fff;       /* Card background */
+      --text-color: #222;            /* Main text color */
+      --border-color: #e5e7eb;       /* Card borders */
+      --max-width: 780px;            /* Maximum content width */
+    }
+
+    /* ============================================
+       BASE STYLES
+       ============================================ */
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height: 1.5;
+      margin: 0;
+      background: var(--background);
+      color: var(--text-color);
+    }
+
+    /* ============================================
+       HEADER SECTION
+       ============================================ */
+    header {
+      background: var(--primary-color);
+      color: #fff;
+      padding: 2rem 1rem;
+    }
+
+    header h1 {
+      margin: 0 0 0.25rem;
+      font-size: 1.8rem;
+    }
+
+    header p {
+      margin: 0;
+      color: #fff;
+      opacity: 0.95;
+    }
+
+    /* ============================================
+       MAIN CONTENT AREA
+       ============================================ */
+    main {
+      max-width: var(--max-width);
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    /* ============================================
+       CARD COMPONENTS
+       ============================================ */
+    .card {
+      background: var(--card-background);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    /* ============================================
+       HEADINGS
+       ============================================ */
+    h2 {
+      font-size: 1.3rem;
+      margin: 0 0 0.5rem;
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      margin: 1rem 0 0.5rem;
+      color: #fff;
+      background: var(--primary-color);
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    /* ============================================
+       LISTS AND LINKS
+       ============================================ */
+    ul {
+      margin: 0.25rem 0 0.75rem 1.2rem;
+    }
+
+    a {
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* ============================================
+       TAGS AND NOTES
+       ============================================ */
+    .tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      background: var(--primary-light);
+      border: 1px solid var(--primary-border);
+      color: var(--primary-text);
+      border-radius: 999px;
+    }
+
+    .note {
+      font-size: 0.95rem;
+      color: #374151;
+    }
+
+    /* ============================================
+       FOOTER
+       ============================================ */
+    footer {
+      max-width: var(--max-width);
+      margin: 2rem auto;
+      padding: 0 1rem 2rem;
+      font-size: 0.9rem;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <!-- ============================================
+       HEADER - Update course name and description
+       ============================================ -->
+  <header>
+    <h1>EE 470 — Introduction to the Internet of Things</h1>
+    <p>Geovani Palomec — Assignment Index</p>
+  </header>
+
+  <main>
+    <!-- ============================================
+         ASSIGNMENT 1 - Copy this section for more assignments
+         ============================================ -->
+    <section class="card">
+      <span class="tag">Assignment 1</span>
+      <h3>Assignment 1: Database — SQL Code and Report</h3>
+      <ul>
+        <li>GitHub — ESP Microcontroller: <a href="#" target="_blank" rel="noopener">https://github.com/Pac-Geo/IOT_EE470/tree/main/Assignment/Programming%20Microcontrollers</a></li>
+        <li>GitHub — MySQL scripts: <a href="#" target="_blank" rel="noopener">https://github.com/Pac-Geo/IOT_EE470/blob/main/Assignment/Database/MySQL%20scripts</a></li>
+        <li>Assignment report (PDF or page): <a href="#" target="_blank" rel="noopener">https://docs.google.com/document/d/1ai0UG8OJ7d3Qr7gaZSJlIQSgVieGEeuIZw4UpWqDfmc/edit?usp=sharing</a></li>
+      </ul>
+      <p class="note">Goal: Create and populate MySQL sensor tables, register sensor nodes, and display sensor measurements using a combined VIEW. </p>
+    </section>
+
+    <!-- ============================================
+         ASSIGNMENT 2
+         ============================================ -->
+    <section class="card">
+      <span class="tag">Assignment 2</span>
+      <h3>Building a Simple Dashboard</h3>
+      <ul>
+        <li>GitHub — ESP code: <a href="#" target="_blank" rel="noopener">Add link</a></li>
+        <li>GitHub — MySQL scripts: <a href="#" target="_blank" rel="noopener">Add link</a></li>
+        <li>Assignment report (PDF or page): <a href="#" target="_blank" rel="noopener">Add link</a></li>
+      </ul>
+      <p class="note">Goal: create a basic dashboard that reads from your database and presents key sensor metrics.</p>
+    </section>
+
+    <!-- ============================================
+         ADD MORE ASSIGNMENTS BELOW
+         Copy the structure above and update:
+         - Tag number
+         - Assignment title
+         - Links
+         - Goal description
+         ============================================ -->
+    
+  </main>
+
+  <!-- ============================================
+       FOOTER
+       ============================================ -->
+  <footer>
+    <p>💡 <strong>Tip:</strong> Keep this page updated as you submit new work. Place all future assignment links here.</p>
+  </footer>
+</body>
+</html>
