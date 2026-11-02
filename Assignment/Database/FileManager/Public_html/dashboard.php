@@ -75,38 +75,37 @@ if (isset($params['node_name']) || isset($params['nodeId'])) {
         exit('REJECTED: Sensor is not registered.');
     }
 
-    if ($time !== null && $time !== '') {
-        if (!is_string($time)) {
-            http_response_code(400);
-            exit('REJECTED: Invalid timestamp.');
-        }
-        // The example encodes the timestamp with a space represented as %20.
-        $date = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $time);
-        if (!$date || $date->format('Y-m-d H:i:s') !== $time) {
-            http_response_code(400);
-            exit('REJECTED: Use YYYY-MM-DD HH:MM:SS.');
-        }
+    if ($time === null || $time === '') {
+        http_response_code(400);
+        exit('REJECTED: Timestamp is required.');
+    }
+
+    if (!is_string($time)) {
+        http_response_code(400);
+        exit('REJECTED: Invalid timestamp.');
+    }
+
+    // The timestamp arrives with its space represented as %20 in the URL.
+    $date = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $time);
+    if (!$date || $date->format('Y-m-d H:i:s') !== $time) {
+        http_response_code(400);
+        exit('REJECTED: Use YYYY-MM-DD HH:MM:SS.');
     }
 
     try {
-        if ($time === null || $time === '') {
-            $stmt = $conn->prepare(
-                'INSERT INTO sensor_data (node_name, time_received, temperature, humidity) VALUES (?, CURRENT_TIMESTAMP, ?, ?)'
-            );
-            $stmt->bind_param('sdd', $node, $temperature, $humidity);
-        } else {
-             $stmt = $conn->prepare(
-                'INSERT INTO sensor_data (node_name, time_received, temperature, humidity) VALUES (?, ?, ?, ?)'
-            );
-            $stmt->bind_param('ssdd', $node, $time, $temperature, $humidity);
-        }
+        $stmt = $conn->prepare(
+            'INSERT INTO sensor_data
+            (node_name, time_received, temperature, humidity)
+            VALUES (?, ?, ?, ?)'
+        );
+        $stmt->bind_param('ssdd', $node, $time, $temperature, $humidity);
         $stmt->execute();
         $stmt->close();
         echo "SUCCESS: Measurement inserted for $node\n";
         if ($encodedRequest) {
             echo "Decoded nodeId=$node\n";
             echo "Decoded nodeTemp=$temperature\n";
-            echo 'Decoded timeReceived=' . ($time ?: 'CURRENT_TIMESTAMP') . "\n";
+            echo 'Decoded timeReceived=' . $time . "\n";
             echo 'Decoded humidity=' . ($humidity === null ? 'NULL' : $humidity) . "\n";
         }
         $conn->close();
@@ -145,6 +144,7 @@ $stmt->close();
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="refresh" content="5">
 <title>EE 470 - Sensor Dashboard</title>
 <style>
 body { font-family: Arial, sans-serif; margin: 30px; }
@@ -190,7 +190,12 @@ th { background-color: lightgreen; }
 </tr>
 </table>
 <h2>Temperature Graph - <?= htmlspecialchars($selectedNode) ?></h2>
-<iframe src="Chartjs/graph.html?node=<?= urlencode($selectedNode) ?>" width="100%" height="450" style="border: none;" title="Sensor Temperature Graph"></iframe>
+<iframe src="Chartjs/graph.html?node=<?= urlencode($selectedNode) ?>"
+        width="100%"
+        height="450"
+        style="border: none;"
+        title="Temperature Graph">
+</iframe>
 <h2>Sensor Data</h2>
 <table>
 <tr><th>Node Name</th><th>Time Received</th><th>Temperature (°C)</th><th>Humidity (%)</th></tr>
