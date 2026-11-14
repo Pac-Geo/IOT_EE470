@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ESP8266 Potentiometer Readings</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem auto; max-width: 900px; padding: 0 1rem; }
+    #status { min-height: 1.5rem; }
+  </style>
+</head>
+<body>
+  <h1>ESP8266 Potentiometer Readings</h1>
+  <p>ADC count (0–1023), recorded when the ESP8266 button is pressed.</p>
+  <p id="status" role="status">Loading readings…</p>
+  <canvas id="readings-chart" aria-label="Potentiometer values over time"></canvas>
+
+  <script>
+    async function loadReadings() {
+      const status = document.getElementById("status");
+
+      try {
+        const response = await fetch("potentiometer_data.php");
+        if (!response.ok) {
+          throw new Error(`Data endpoint returned HTTP ${response.status}`);
+        }
+
+        const readings = await response.json();
+        status.textContent = readings.length
+          ? `Showing ${readings.length} most recent readings.`
+          : "No potentiometer readings have been recorded yet.";
+
+        new Chart(document.getElementById("readings-chart"), {
+          type: "line",
+          data: {
+            labels: readings.map((reading) => reading.time_received),
+            datasets: [{
+              label: "Potentiometer ADC",
+              data: readings.map((reading) => Number(reading.adc_value)),
+              borderColor: "#1769aa",
+              backgroundColor: "rgba(23, 105, 170, 0.15)",
+              pointRadius: 4,
+              tension: 0.15
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: { title: { display: true, text: "Database received time" } },
+              y: {
+                min: 0,
+                max: 1023,
+                title: { display: true, text: "ADC count (0–1023)" }
+              }
+            }
+          }
+        });
+      } catch (error) {
+        status.textContent = `Could not load readings: ${error.message}`;
+      }
+    }
+
+    loadReadings();
+  </script>
+</body>
+</html>
