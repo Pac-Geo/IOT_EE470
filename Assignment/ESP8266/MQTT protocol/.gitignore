@@ -1,7 +1,0 @@
-.pio/
-.vscode/
-.venv/
-__pycache__/
-src/Contra.h
-relay/.env
-web/db_config.php
