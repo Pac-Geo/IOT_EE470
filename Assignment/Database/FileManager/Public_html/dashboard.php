@@ -1,10 +1,15 @@
 
 <?php
 // EE 470 - Sensor Dashboard, GET Insertion, and Base64 Decoding
-$host = 'localhost';
-$database = 'u854844498_GeovaniPalomec';
-$username = 'u854844498_db_GeovaniP';
-$password = '@L379d391';
+$host = getenv('DB_HOST') ?: 'localhost';
+$database = getenv('DB_NAME');
+$username = getenv('DB_USER');
+$password = getenv('DB_PASSWORD');
+if ($database === false || $database === '' ||
+    $username === false || $username === '' || $password === false) {
+    http_response_code(500);
+    exit('Database configuration is missing.');
+}
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 try {
@@ -33,6 +38,10 @@ if ($rawQuery !== '' && strpos($rawQuery, '=') === false) {
 if (isset($params['node_name']) || isset($params['nodeId'])) {
     header('Content-Type: text/plain; charset=utf-8');
     $node = $params['node_name'] ?? $params['nodeId'];
+    if ($node === 'node_6') {
+        http_response_code(400);
+        exit('Node 6 potentiometer readings are inserted by the Python MQTT relay.');
+    }
     $temperature = $params['temperature'] ?? $params['nodeTemp'] ?? null;
     $humidity = $params['humidity'] ?? null;
     $time = $params['time_received'] ?? $params['timeReceived'] ?? null;
@@ -131,6 +140,24 @@ $selectedNode = $_GET['node'] ?? 'node_1';
 if (!is_string($selectedNode) || !in_array($selectedNode, $nodeNames, true)) {
     $selectedNode = $nodeNames[0] ?? '';
 }
+$isPotentiometer = ($selectedNode === 'node_6');
+$potReadings = [];
+$latestPot = null;
+if ($isPotentiometer) {
+    $conn->query("SET time_zone = '+00:00'");
+    $potTopic = 'testtopic/temp/outTopic/EE470pacgeo8266/potentiometer';
+    $stmt = $conn->prepare('SELECT COUNT(*) AS total_readings, AVG(value) AS avg_value FROM potentiometer_readings WHERE topic = ?');
+    $stmt->bind_param('s', $potTopic);
+    $stmt->execute();
+    $potAverage = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    $stmt = $conn->prepare('SELECT id, value, time_received FROM potentiometer_readings WHERE topic = ? ORDER BY id DESC LIMIT 300');
+    $stmt->bind_param('s', $potTopic);
+    $stmt->execute();
+    $potReadings = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $latestPot = $potReadings[0] ?? null;
+    $stmt->close();
+}
 $stmt = $conn->prepare(
     'SELECT AVG(temperature) AS avg_temperature, AVG(humidity) AS avg_humidity, COUNT(*) AS total_readings FROM sensor_data WHERE node_name = ?'
 );
@@ -175,11 +202,22 @@ th { background-color: lightgreen; }
 <form method="GET">
 <select name="node" class="sensor-select" aria-label="Select sensor" onchange="this.form.submit()">
 <?php foreach ($nodeNames as $nodeName): ?>
-<option value="<?= htmlspecialchars($nodeName) ?>" <?= $selectedNode === $nodeName ? 'selected' : '' ?>><?= htmlspecialchars($nodeName) ?></option>
+<option value="<?= htmlspecialchars($nodeName) ?>" <?= $selectedNode === $nodeName ? 'selected' : '' ?>><?= htmlspecialchars($nodeName === 'node_6' ? 'node_6 - Potentiometer' : $nodeName) ?></option>
 <?php endforeach; ?>
 </select>
 </form>
 </div>
+<?php if ($isPotentiometer): ?>
+<table>
+<tr><th>Sensor</th><th>Readings</th><th>Average Potentiometer (ADC)</th><th>Latest Potentiometer (ADC)</th></tr>
+<tr>
+<td>node_6</td>
+<td><?= (int)$potAverage['total_readings'] ?></td>
+<td><?= $potAverage['avg_value'] !== null ? number_format((float)$potAverage['avg_value'], 2) : 'N/A' ?></td>
+<td><?= $latestPot !== null ? (int)$latestPot['value'] : 'N/A' ?></td>
+</tr>
+</table>
+<?php else: ?>
 <table>
 <tr><th>Sensor</th><th>Readings</th><th>Average Temperature (°C)</th><th>Average Humidity (%)</th></tr>
 <tr>
@@ -189,13 +227,27 @@ th { background-color: lightgreen; }
 <td><?= $average['avg_humidity'] !== null ? number_format((float)$average['avg_humidity'], 2) : 'N/A' ?></td>
 </tr>
 </table>
-<h2>Temperature Graph - <?= htmlspecialchars($selectedNode) ?></h2>
+<?php endif; ?>
+<h2><?= $isPotentiometer ? 'Potentiometer' : 'Temperature' ?> Graph - <?= htmlspecialchars($selectedNode) ?></h2>
 <iframe src="Chartjs/graph.html?node=<?= urlencode($selectedNode) ?>"
         width="100%"
         height="450"
         style="border: none;"
-        title="Temperature Graph">
+        title="<?= $isPotentiometer ? 'Potentiometer Graph' : 'Temperature Graph' ?>">
 </iframe>
+<?php if ($isPotentiometer): ?>
+<h2>Node 6 Potentiometer Data</h2>
+<p>Latest 300 readings, newest first. Timestamps below are UTC. The graph shows your local time.</p>
+<?php if (!$potReadings): ?>
+<p>No potentiometer readings stored yet. Keep the Python relay running and turn the potentiometer.</p>
+<?php endif; ?>
+<table>
+<tr><th>Node Name</th><th>Time Received (UTC)</th><th>Potentiometer (ADC)</th></tr>
+<?php foreach ($potReadings as $reading): ?>
+<tr><td>node_6</td><td><?= htmlspecialchars($reading['time_received']) ?></td><td><?= (int)$reading['value'] ?></td></tr>
+<?php endforeach; ?>
+</table>
+<?php else: ?>
 <h2>Sensor Data</h2>
 <table>
 <tr><th>Node Name</th><th>Time Received</th><th>Temperature (°C)</th><th>Humidity (%)</th></tr>
@@ -208,6 +260,7 @@ th { background-color: lightgreen; }
 </tr>
 <?php endwhile; ?>
 </table>
+<?php endif; ?>
 </body>
 </html>
 <?php $conn->close(); ?>
